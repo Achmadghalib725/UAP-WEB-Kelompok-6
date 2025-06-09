@@ -29,7 +29,7 @@ $default_profile_pic = '../assets/default-profile.png';
 $profile_pic_path = ($profile_pic_filename && file_exists($upload_dir . $profile_pic_filename)) ? '../uploads/' . htmlspecialchars($profile_pic_filename, ENT_QUOTES, 'UTF-8') : $default_profile_pic;
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -232,23 +232,26 @@ $profile_pic_path = ($profile_pic_filename && file_exists($upload_dir . $profile
         color: var(--color-text-primary);
     }
 
-    /* Add Task button */
-    .add-task-btn {
+    /* Add Task button as link */
+    .add-task-link {
         background-color: var(--color-main-green);
         color: white;
         border: none;
-        padding: 0.75rem 1.75rem;
-        font-size: 1.1rem;
-        font-weight: 600;
+        padding: 1rem 2.5rem;
+        font-size: 1.3rem;
+        font-weight: 700;
         border-radius: var(--border-radius);
         cursor: pointer;
-        margin-bottom: 2rem;
-        max-width: 260px;
         user-select: none;
         transition: background-color 0.3s ease;
-        align-self: flex-start;
+        text-decoration: none;
+        display: inline-block;
+        margin-bottom: 2rem;
+        max-width: 280px;
+        text-align: center;
     }
-    .add-task-btn:hover, .add-task-btn:focus {
+    .add-task-link:hover,
+    .add-task-link:focus {
         background-color: var(--color-main-green-dark);
         outline: none;
     }
@@ -298,88 +301,6 @@ $profile_pic_path = ($profile_pic_filename && file_exists($upload_dir . $profile
         align-items: center;
         justify-content: center;
     }
-
-    /* Modal background and container */
-    .modal-bg {
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,0.35);
-        display: none;
-        justify-content: center;
-        align-items: center;
-        z-index: 1500;
-    }
-    .modal-bg.active {
-        display: flex;
-    }
-    .modal {
-        background: var(--color-bg);
-        border-radius: var(--border-radius);
-        padding: 2rem;
-        width: 90%;
-        max-width: 400px;
-        box-shadow: 0 8px 24px var(--color-shadow);
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-    }
-    .modal h2 {
-        margin: 0 0 1rem 0;
-        font-weight: 700;
-        font-size: 1.8rem;
-        color: var(--color-text-primary);
-    }
-    .modal label {
-        font-weight: 600;
-        font-size: 1rem;
-        color: var(--color-text-primary);
-    }
-    .modal input[type="text"] {
-        padding: 0.6rem 0.8rem;
-        font-size: 1rem;
-        border: 1.5px solid #ccc;
-        border-radius: 6px;
-        width: 100%;
-        outline-offset: 2px;
-        transition: border-color 0.3s ease;
-    }
-    .modal input[type="text"]:focus {
-        border-color: var(--color-main-green);
-        box-shadow: 0 0 8px var(--color-main-green);
-        outline: none;
-    }
-    .modal-buttons {
-        display: flex;
-        justify-content: flex-end;
-        gap: 1rem;
-        margin-top: 1rem;
-    }
-    .btn {
-        font-weight: 600;
-        font-size: 1rem;
-        border-radius: var(--border-radius);
-        cursor: pointer;
-        padding: 0.6rem 1.2rem;
-        user-select: none;
-        border: none;
-        transition: background-color 0.3s ease;
-    }
-    .btn-primary {
-        background-color: var(--color-main-green);
-        color: white;
-    }
-    .btn-primary:hover, .btn-primary:focus {
-        background-color: var(--color-main-green-dark);
-        outline: none;
-    }
-    .btn-secondary {
-        background-color: #cccccc;
-        color: #333;
-    }
-    .btn-secondary:hover, .btn-secondary:focus {
-        background-color: #b3b3b3;
-        outline: none;
-    }
 </style>
 </head>
 <body>
@@ -400,9 +321,9 @@ $profile_pic_path = ($profile_pic_filename && file_exists($upload_dir . $profile
             <h1>DoTask</h1>
         </header>
 
-        <button class="add-task-btn" id="add-task-btn" aria-haspopup="dialog" aria-controls="add-task-modal">
+        <a href="add_task.php" class="add-task-link" aria-label="Tambah Tugas Baru" role="button">
             + Tambah Tugas
-        </button>
+        </a>
 
         <?php if (count($tasks) > 0): ?>
             <section class="tasks" aria-live="polite" aria-label="Daftar tugas pengguna">
@@ -420,62 +341,14 @@ $profile_pic_path = ($profile_pic_filename && file_exists($upload_dir . $profile
         <?php endif; ?>
     </main>
 
-    <!-- Modal for adding task -->
-    <div class="modal-bg" id="add-task-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-hidden="true">
-        <div class="modal">
-            <h2 id="modal-title">Tambah Tugas Baru</h2>
-            <form id="task-form" method="POST" action="add_task.php" novalidate>
-                <label for="task_name">Nama Tugas</label>
-                <input type="text" id="task_name" name="task_name" placeholder="Masukkan nama tugas" required minlength="1" maxlength="255" aria-required="true" />
-                <div class="modal-buttons">
-                    <button type="button" class="btn btn-secondary" id="cancel-btn">Batal</button>
-                    <button type="submit" class="btn btn-primary">Simpan</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
 <script>
     const sidebar = document.getElementById('sidebar');
     const toggleBtn = document.getElementById('toggle-btn');
-    const addTaskBtn = document.getElementById('add-task-btn');
-    const modalBg = document.getElementById('add-task-modal');
-    const cancelBtn = document.getElementById('cancel-btn');
-    const taskForm = document.getElementById('task-form');
-    const taskNameInput = document.getElementById('task_name');
 
     toggleBtn.addEventListener('click', () => {
         sidebar.classList.toggle('collapsed');
     });
-
-    addTaskBtn.addEventListener('click', () => {
-        modalBg.classList.add('active');
-        taskNameInput.focus();
-        modalBg.setAttribute('aria-hidden', 'false');
-    });
-
-    cancelBtn.addEventListener('click', () => {
-        modalBg.classList.remove('active');
-        modalBg.setAttribute('aria-hidden', 'true');
-        taskForm.reset();
-    });
-
-    modalBg.addEventListener('click', (e) => {
-        if (e.target === modalBg) {
-            modalBg.classList.remove('active');
-            modalBg.setAttribute('aria-hidden', 'true');
-            taskForm.reset();
-        }
-    });
-
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && modalBg.classList.contains('active')) {
-            modalBg.classList.remove('active');
-            modalBg.setAttribute('aria-hidden', 'true');
-            taskForm.reset();
-            addTaskBtn.focus();
-        }
-    });
 </script>
 </body>
 </html>
+
