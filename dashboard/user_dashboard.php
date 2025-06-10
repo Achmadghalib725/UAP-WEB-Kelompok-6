@@ -16,7 +16,7 @@ $stmt->execute();
 $result = $stmt->get_result();
 $tasks = $result->fetch_all(MYSQLI_ASSOC);
 
-// Fetch profile picture filename for sidebar display
+// Fetch profile picture filename for navbar display
 $stmt = $conn->prepare("SELECT profile_pic FROM users WHERE id = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
@@ -44,8 +44,8 @@ $profile_pic_path = ($profile_pic_filename && file_exists($upload_dir . $profile
         --color-card-bg: #f9fafb;
         --color-shadow: rgba(0, 0, 0, 0.05);
         --border-radius: 0.75rem;
-        --sidebar-width: 250px;
-        --sidebar-width-collapsed: 64px;
+        --nav-height: 64px;
+        --max-width: 1200px;
         --transition-speed: 0.3s;
         --font-heading: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
@@ -62,7 +62,6 @@ $profile_pic_path = ($profile_pic_filename && file_exists($upload_dir . $profile
         font-size: 18px;
         line-height: 1.5;
         overflow-x: hidden;
-        display: flex;
     }
     a {
         color: inherit;
@@ -74,165 +73,125 @@ $profile_pic_path = ($profile_pic_filename && file_exists($upload_dir . $profile
         text-decoration: underline;
     }
 
-    /* Sidebar */
-    .sidebar {
-        position: fixed;
+    /* Top Navigation Bar */
+    .topnav {
+        position: sticky;
         top: 0;
         left: 0;
-        height: 100vh;
-        width: var(--sidebar-width);
+        width: 100%;
+        height: var(--nav-height);
         background-color: var(--color-main-green);
         color: white;
-        padding-top: 1.5rem;
         display: flex;
-        flex-direction: column;
-        transition: width var(--transition-speed) ease;
-        box-shadow: 2px 0 12px var(--color-shadow);
+        align-items: center;
+        justify-content: flex-start;
+        padding: 0 1rem 0 1.5rem;
+        box-shadow: 0 2px 10px var(--color-shadow);
         user-select: none;
         z-index: 1000;
-        align-items: stretch;
+        gap: 2rem;
     }
-    .sidebar.collapsed {
-        width: var(--sidebar-width-collapsed);
-    }
-    .sidebar a.menu-item.profile {
-        padding: 1rem 1.5rem;
-        font-size: 1.05rem;
+    /* Profile dropdown container */
+    .profile-dropdown {
+        position: relative;
         display: flex;
         align-items: center;
         cursor: pointer;
-        user-select: none;
         white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        transition: background-color var(--transition-speed), color var(--transition-speed);
-        border: none;
-        background: transparent;
+        user-select: none;
+    }
+    .profile-dropdown-inner {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
         color: white;
-        text-align: left;
         font-weight: 700;
-        font-size: 1.2rem;
-        border-bottom: 1px solid rgba(255 255 255 / 0.25);
-        margin-bottom: 1rem;
-        outline-offset: 2px;
+        font-size: 1.1rem;
+        line-height: 1;
+        user-select: text;
     }
-    .sidebar a.menu-item.profile:hover,
-    .sidebar a.menu-item.profile:focus {
-        background-color: var(--color-main-green-dark);
-        color: white;
-        outline: none;
-    }
-    .sidebar a.menu-item.profile img {
-        width: 36px;
-        height: 36px;
+    .profile-dropdown-inner img {
+        width: 40px;
+        height: 40px;
         border-radius: 50%;
         object-fit: cover;
-        margin-right: 10px;
-        flex-shrink: 0;
+        border: 2px solid white;
+        display: block;
     }
-    .sidebar.collapsed a.menu-item.profile span {
+    /* Dropdown menu */
+    .dropdown-menu {
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 0;
+        background: white;
+        color: var(--color-text-primary);
+        border-radius: var(--border-radius);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        min-width: 140px;
+        font-size: 1rem;
+        font-weight: 600;
         display: none;
-    }
-    .sidebar.collapsed a.menu-item.profile img {
-        margin: 0 auto;
-    }
-    .menu {
-        display: flex;
         flex-direction: column;
-        align-items: center;
+        padding: 0.5rem 0;
+        z-index: 1100;
     }
-    /* Toggle button */
-    .toggle-btn {
-        background: none;
-        border: none;
+    .dropdown-menu.show {
+        display: flex;
+    }
+    .dropdown-menu a {
+        padding: 0.6rem 1.25rem;
+        color: var(--color-text-primary);
+        text-decoration: none;
+        transition: background-color 0.2s ease;
+    }
+    .dropdown-menu a:hover,
+    .dropdown-menu a:focus {
+        background-color: var(--color-main-green);
         color: white;
-        font-size: 1.5rem;
-        cursor: pointer;
-        padding: 0.75rem 1.5rem;
-        user-select: none;
-        transition: background-color var(--transition-speed);
-        align-self: flex-start;
-    }
-    .toggle-btn:hover, .toggle-btn:focus {
-        background-color: var(--color-main-green-dark);
         outline: none;
-    }
-    .sidebar.collapsed .toggle-btn {
-        padding: 0.75rem 0;
-        text-align: center;
-        align-self: center;
     }
 
-    /* Settings and Logout below toggle */
-    .bottom-menu {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-        margin-top: 1rem;
-    }
-    .bottom-menu a.menu-item {
-        padding: 1rem 1.5rem;
-        font-size: 1.05rem;
+    .menu {
         display: flex;
         align-items: center;
-        cursor: pointer;
-        user-select: none;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        gap: 1.5rem;
+        margin-left: auto;
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+    .menu a {
+        padding: 0.5rem 0.75rem;
+        border-radius: var(--border-radius);
         transition: background-color var(--transition-speed), color var(--transition-speed);
-        border: none;
-        background: transparent;
-        color: white;
-        text-align: left;
     }
-    .bottom-menu a.menu-item:hover,
-    .bottom-menu a.menu-item:focus {
-        background-color: var(--color-main-green-dark);
-        color: white;
+    .menu a:hover,
+    .menu a:focus {
+        background-color: rgba(255 255 255 / 0.2);
         outline: none;
-    }
-    .bottom-menu a.menu-item i {
-        margin-right: 1rem;
-        min-width: 20px;
-        text-align: center;
-        font-style: normal;
-        font-weight: bold;
-        user-select: none;
-    }
-    .sidebar.collapsed .bottom-menu a.menu-item span {
-        display: none;
-    }
-    .sidebar.collapsed .bottom-menu a.menu-item i {
-        margin: 0 auto;
+        color: white;
+        text-decoration: none;
     }
 
     /* Main content */
-    .main {
-        margin-left: var(--sidebar-width);
-        padding: 3rem 3rem 4rem;
-        flex-grow: 1;
-        min-height: 100vh;
-        transition: margin-left var(--transition-speed) ease;
+    main.main {
+        margin: 1.5rem auto 3rem;
+        max-width: var(--max-width);
+        padding: 0 1rem;
+        min-height: calc(100vh - var(--nav-height) - 4rem);
         display: flex;
         flex-direction: column;
-        max-width: 1200px;
-        width: 100%;
     }
-    .sidebar.collapsed ~ .main {
-        margin-left: var(--sidebar-width-collapsed);
-    }
-    .main-header {
+    main.main header.main-header {
         margin-bottom: 2rem;
     }
-    .main-header h1 {
+    main.main header.main-header h1 {
         font-weight: 800;
         font-size: 3rem;
         margin: 0;
         color: var(--color-text-primary);
     }
 
-    /* Add Task button as link */
+    /* Add Task button */
     .add-task-link {
         background-color: var(--color-main-green);
         color: white;
@@ -249,6 +208,7 @@ $profile_pic_path = ($profile_pic_filename && file_exists($upload_dir . $profile
         margin-bottom: 2rem;
         max-width: 280px;
         text-align: center;
+        align-self: flex-start;
     }
     .add-task-link:hover,
     .add-task-link:focus {
@@ -272,6 +232,7 @@ $profile_pic_path = ($profile_pic_filename && file_exists($upload_dir . $profile
         display: flex;
         flex-direction: column;
         gap: 0.5rem;
+        cursor: default;
     }
     .task-card:hover, .task-card:focus-within {
         box-shadow: 0 10px 30px rgba(92,184,92,0.25);
@@ -301,24 +262,59 @@ $profile_pic_path = ($profile_pic_filename && file_exists($upload_dir . $profile
         align-items: center;
         justify-content: center;
     }
+
+    @media (max-width: 600px) {
+        .topnav {
+            flex-wrap: wrap;
+            height: auto;
+            padding: 0.5rem 1rem;
+            gap: 0.5rem 1rem;
+        }
+        .menu {
+            width: 100%;
+            justify-content: center;
+            order: 2;
+            margin-left: 0;
+            gap: 0.75rem;
+        }
+        .profile-dropdown {
+            order: 1;
+            flex-grow: 1;
+        }
+        .add-task-link {
+            width: 100%;
+            max-width: none;
+            text-align: center;
+            padding: 1rem 0;
+        }
+        main.main {
+            margin-top: calc(var(--nav-height) + 1rem);
+        }
+    }
 </style>
 </head>
 <body>
-    <aside class="sidebar" id="sidebar" aria-label="Sidebar menu">
-        <a href="profile.php" class="menu-item profile" tabindex="0" aria-current="page" aria-label="Profile Menu">
-            <img src="<?php echo $profile_pic_path; ?>" alt="Foto Profil" />
-            <span><?php echo htmlspecialchars($_SESSION['username'], ENT_QUOTES, 'UTF-8'); ?></span>
-        </a>
-        <button class="toggle-btn" id="toggle-btn" aria-label="Toggle sidebar" title="Toggle sidebar">&#9776;</button>
-        <div class="bottom-menu">
-            <a href="settings.php" class="menu-item" role="menuitem" tabindex="0"><i>⚙️</i><span>Settings</span></a>
-            <a href="../auth/logout.php" class="menu-item" role="menuitem" tabindex="0"><i>🚪</i><span>Logout</span></a>
+    <nav class="topnav" role="navigation" aria-label="Main Navigation">
+        <div class="profile-dropdown" id="profileDropdown" tabindex="0" aria-haspopup="true" aria-expanded="false" aria-label="User profile menu">
+            <div class="profile-dropdown-inner" id="profileToggle">
+                <img src="<?php echo $profile_pic_path; ?>" alt="Foto Profil" id="profileImage" />
+                <span><?php echo htmlspecialchars($_SESSION['username'], ENT_QUOTES, 'UTF-8'); ?></span>
+            </div>
+            <div class="dropdown-menu" id="dropdownMenu" role="menu" aria-label="Profile and logout options">
+                <a href="profile.php" role="menuitem" tabindex="-1">Profile</a>
+                <a href="../auth/logout.php" role="menuitem" tabindex="-1">Logout</a>
+            </div>
         </div>
-    </aside>
 
-    <main class="main" tabindex="main">
+        <div class="menu" role="menubar" aria-label="Navigation menu">
+            <a href="add_task.php" role="menuitem" tabindex="0">Tambah Tugas</a>
+            <a href="settings.php" role="menuitem" tabindex="0">Settings</a>
+        </div>
+    </nav>
+
+    <main class="main" tabindex="main" role="main" aria-labelledby="pageTitle">
         <header class="main-header" aria-label="Website name">
-            <h1>DoTask</h1>
+            <h1 id="pageTitle">DoTask</h1>
         </header>
 
         <a href="add_task.php" class="add-task-link" aria-label="Tambah Tugas Baru" role="button">
@@ -328,9 +324,9 @@ $profile_pic_path = ($profile_pic_filename && file_exists($upload_dir . $profile
         <?php if (count($tasks) > 0): ?>
             <section class="tasks" aria-live="polite" aria-label="Daftar tugas pengguna">
                 <?php foreach ($tasks as $task): ?>
-                    <article class="task-card" tabindex="0">
-                        <h3 class="task-title"><?php echo htmlspecialchars($task['task_name'], ENT_QUOTES, 'UTF-8'); ?></h3>
-                        <p class="task-status">Status: <?php echo htmlspecialchars($task['status'], ENT_QUOTES, 'UTF-8'); ?></p>
+                    <article class="task-card" tabindex="0" aria-label="Tugas <?= htmlspecialchars($task['task_name']); ?>">
+                        <h3 class="task-title"><?= htmlspecialchars($task['task_name'], ENT_QUOTES, 'UTF-8'); ?></h3>
+                        <p class="task-status">Status: <?= htmlspecialchars($task['status'], ENT_QUOTES, 'UTF-8'); ?></p>
                     </article>
                 <?php endforeach; ?>
             </section>
@@ -342,12 +338,60 @@ $profile_pic_path = ($profile_pic_filename && file_exists($upload_dir . $profile
     </main>
 
 <script>
-    const sidebar = document.getElementById('sidebar');
-    const toggleBtn = document.getElementById('toggle-btn');
+    (function(){
+        const profileDropdown = document.getElementById('profileDropdown');
+        const dropdownMenu = document.getElementById('dropdownMenu');
+        const profileToggle = document.getElementById('profileToggle');
 
-    toggleBtn.addEventListener('click', () => {
-        sidebar.classList.toggle('collapsed');
-    });
+        function closeDropdown() {
+            dropdownMenu.classList.remove('show');
+            profileDropdown.setAttribute('aria-expanded', 'false');
+        }
+
+        function toggleDropdown() {
+            const isOpen = dropdownMenu.classList.contains('show');
+            if (isOpen) {
+                closeDropdown();
+            } else {
+                dropdownMenu.classList.add('show');
+                profileDropdown.setAttribute('aria-expanded', 'true');
+            }
+        }
+
+        profileToggle.addEventListener('click', e => {
+            e.stopPropagation();
+            toggleDropdown();
+        });
+
+        profileDropdown.addEventListener('keydown', e => {
+            // Close dropdown on Escape
+            if (e.key === 'Escape' && dropdownMenu.classList.contains('show')) {
+                closeDropdown();
+                profileDropdown.focus();
+            }
+            // Toggle dropdown on Enter or Space key
+            if ((e.key === 'Enter' || e.key === ' ') && e.target === profileDropdown) {
+                e.preventDefault();
+                toggleDropdown();
+            }
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', () => {
+            if (dropdownMenu.classList.contains('show')) {
+                closeDropdown();
+            }
+        });
+
+        // Close dropdown on focusout (when focus moves outside)
+        profileDropdown.addEventListener('focusout', e => {
+            // Check if new focused element outside dropdown
+            const relatedTarget = e.relatedTarget;
+            if (!profileDropdown.contains(relatedTarget)) {
+                closeDropdown();
+            }
+        });
+    })();
 </script>
 </body>
 </html>
