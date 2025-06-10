@@ -8,23 +8,13 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 // Initialize variables for form fields
-$task_name = $description = $assigned_user_id = $due_date = $priority = $status = "";
-$tags = $comments = $attachments = $estimated_time = $actual_time = $recurrence = $parent_task_id = $completion_date = "";
+$task_name = $description = $due_date = $priority = $status = "";
+$tags = $comments = $recurrence = $parent_task_id = $completion_date = "";
 $error = "";
 $success = "";
 
-// Priority and status options for select inputs
 $priority_options = ['Low', 'Medium', 'High'];
 $status_options = ['Pending', 'In Progress', 'Completed', 'Overdue'];
-
-// Fetch users list for assigned_user_id dropdown
-$users = [];
-$user_result = $conn->query("SELECT id, username FROM users ORDER BY username");
-if ($user_result) {
-    while ($row = $user_result->fetch_assoc()) {
-        $users[] = $row;
-    }
-}
 
 // Fetch tasks list for parent_task_id dropdown (optional subtasks)
 $tasks = [];
@@ -38,14 +28,11 @@ if ($task_result) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $task_name = trim($_POST['task_name'] ?? '');
     $description = trim($_POST['description'] ?? '');
-    $assigned_user_id = trim($_POST['assigned_user_id'] ?? '');
     $due_date = trim($_POST['due_date'] ?? '');
     $priority = $_POST['priority'] ?? 'Medium';
     $status = $_POST['status'] ?? 'Pending';
     $tags = trim($_POST['tags'] ?? '');
     $comments = trim($_POST['comments'] ?? '');
-    $estimated_time = trim($_POST['estimated_time'] ?? '');
-    $actual_time = trim($_POST['actual_time'] ?? '');
     $recurrence = trim($_POST['recurrence'] ?? '');
     $parent_task_id = trim($_POST['parent_task_id'] ?? '');
     $completion_date = trim($_POST['completion_date'] ?? '');
@@ -61,31 +48,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $user_id = $_SESSION['user_id'];
 
-        // For nullables: convert empty strings to null
-        $assigned_user_id = $assigned_user_id === '' ? null : $assigned_user_id;
         $due_date = $due_date === '' ? null : $due_date;
         $tags = $tags === '' ? null : $tags;
         $comments = $comments === '' ? null : $comments;
-        $estimated_time = $estimated_time === '' ? null : $estimated_time;
-        $actual_time = $actual_time === '' ? null : $actual_time;
         $recurrence = $recurrence === '' ? null : $recurrence;
         $parent_task_id = $parent_task_id === '' ? null : $parent_task_id;
         $completion_date = $completion_date === '' ? null : $completion_date;
 
-        $stmt = $conn->prepare("INSERT INTO tasks (user_id, task_name, description, assigned_user_id, due_date, priority, status, tags, comments, estimated_time, actual_time, recurrence, parent_task_id, completion_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt = $conn->prepare("INSERT INTO tasks (user_id, task_name, description, due_date, priority, status, tags, comments, recurrence, parent_task_id, completion_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         $stmt->bind_param(
-            "ississssssssis",
+            "issssssssis",
             $user_id,
             $task_name,
             $description,
-            $assigned_user_id,
             $due_date,
             $priority,
             $status,
             $tags,
             $comments,
-            $estimated_time,
-            $actual_time,
             $recurrence,
             $parent_task_id,
             $completion_date
@@ -93,9 +73,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($stmt->execute()) {
             $success = "Tugas berhasil ditambahkan.";
-            // Reset form fields except user_id
-            $task_name = $description = $assigned_user_id = $due_date = $priority = $status = "";
-            $tags = $comments = $attachments = $estimated_time = $actual_time = $recurrence = $parent_task_id = $completion_date = "";
+            $task_name = $description = $due_date = $priority = $status = "";
+            $tags = $comments = $recurrence = $parent_task_id = $completion_date = "";
         } else {
             $error = "Gagal menyimpan tugas ke database.";
         }
@@ -117,91 +96,111 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       --color-bg: #ffffff;
       --color-text-primary: #1f2937;
       --color-text-secondary: #6b7280;
-      --color-primary: #2563eb;
-      --color-primary-dark: #1e40af;
+      --color-primary: #5cb85c;
+      --color-primary-dark: #4cae4c;
       --color-error: #ef4444;
       --color-success: #10b981;
       --border-radius: 0.75rem;
       --shadow-light: rgba(0,0,0,0.07);
       --max-width: 1200px;
-      --gap: 1.8rem;
+      --gap: 2rem;
+      --transition-speed: 0.3s;
+      --font-family: 'Poppins', sans-serif;
+      --input-bg: #fafafa;
+      --input-border: #d1d5db;
+      --input-focus-border: var(--color-primary);
+      --input-focus-shadow: 0 0 8px var(--color-primary);
     }
+
     html, body {
-      margin: 0; padding: 0;
-      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+      font-family: var(--font-family);
       background: var(--color-bg);
       color: var(--color-text-primary);
+      font-size: 18px;
+      line-height: 1.6;
       min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
+
     main {
       max-width: var(--max-width);
-      margin: 0 auto;
-      padding: 4rem 3rem 5rem;
-      display: flex;
-      flex-direction: column;
-      gap: var(--gap);
+      margin: 3rem auto 4rem;
+      padding: 0 2rem;
+      box-sizing: border-box;
     }
+
     h1 {
-      font-size: 48px;
       font-weight: 700;
+      font-size: 48px;
       margin-bottom: 2rem;
       color: var(--color-primary);
+      user-select: none;
     }
+
     form {
-      background: #f9fafb;
+      background: var(--input-bg);
       padding: 3rem 3.5rem;
       border-radius: var(--border-radius);
-      box-shadow: 0 6px 12px var(--shadow-light);
+      box-shadow: 0 6px 16px var(--shadow-light);
       max-width: 900px;
+      margin: 0 auto;
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: var(--gap);
       box-sizing: border-box;
     }
+
     label {
       display: block;
       font-weight: 600;
       margin-bottom: 0.6rem;
       color: var(--color-text-secondary);
+      user-select: none;
     }
+
     input[type="text"],
     input[type="date"],
-    input[type="number"],
     select,
     textarea {
       width: 100%;
       padding: 12px 14px;
       font-size: 1rem;
-      border: 1.5px solid #d1d5db;
+      font-family: var(--font-family);
+      border: 1.5px solid var(--input-border);
       border-radius: 0.5rem;
-      transition: border-color 0.3s ease, box-shadow 0.3s ease;
-      outline-offset: 2px;
-      font-family: inherit;
+      background-color: white;
       resize: vertical;
+      transition: border-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+      outline-offset: 2px;
     }
+
     input[type="text"]:focus,
     input[type="date"]:focus,
-    input[type="number"]:focus,
     select:focus,
     textarea:focus {
-      border-color: var(--color-primary);
-      box-shadow: 0 0 8px var(--color-primary);
+      border-color: var(--input-focus-border);
+      box-shadow: var(--input-focus-shadow);
       outline: none;
     }
+
     textarea {
       min-height: 80px;
     }
-    /* Full width on all columns for some inputs */
+
     .full-width {
       grid-column: 1 / -1;
     }
-    /* Buttons container */
+
     .buttons {
       grid-column: 1 / -1;
       display: flex;
       justify-content: flex-end;
       gap: 1rem;
     }
+
     button {
       font-weight: 600;
       font-size: 1.1rem;
@@ -210,50 +209,84 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       cursor: pointer;
       user-select: none;
       border: none;
-      transition: background-color 0.3s ease;
-    }
-    button[type="submit"] {
+      transition: background-color var(--transition-speed) ease;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
       background-color: var(--color-primary);
       color: white;
+      box-sizing: border-box;
     }
-    button[type="submit"]:hover,
-    button[type="submit"]:focus {
+
+    button:hover,
+    button:focus {
       background-color: var(--color-primary-dark);
       outline: none;
+      box-shadow: 0 4px 12px rgba(76,174,76,0.5);
     }
+
     button[type="reset"] {
-      background-color: #ededed;
-      color: #555;
+      background-color: #f3f4f6;
+      color: var(--color-text-secondary);
+      box-shadow: none;
     }
+
     button[type="reset"]:hover,
     button[type="reset"]:focus {
-      background-color: #d6d6d6;
-      outline: none;
+      background-color: #e5e7eb;
+      color: var(--color-text-primary);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
+
     .message {
       font-weight: 600;
       font-size: 1rem;
       margin-top: 1rem;
-      text-align: center;
       grid-column: 1 / -1;
+      text-align: center;
+      user-select: none;
     }
+
     .error {
       color: var(--color-error);
     }
+
     .success {
       color: var(--color-success);
     }
-    @media (max-width: 800px) {
+
+    .back-link {
+      display: inline-block;
+      margin: 2rem auto 0;
+      color: var(--color-primary);
+      font-weight: 600;
+      font-size: 1.1rem;
+      text-decoration: none;
+      border-radius: 0.5rem;
+      padding: 0.4rem 1rem;
+      box-shadow: 0 3px 8px rgba(92,184,92,0.3);
+      user-select: none;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      text-align: center;
+      max-width: 900px;
+    }
+
+    .back-link:hover,
+    .back-link:focus {
+      background-color: var(--color-primary);
+      color: white;
+      outline: none;
+    }
+
+    @media (max-width: 600px) {
       form {
-        display: flex;
-        flex-direction: column;
-      }
-      .full-width {
-        grid-column: auto;
+        grid-template-columns: 1fr;
+        padding: 2rem 2rem;
       }
       .buttons {
         justify-content: center;
-        gap: 1rem;
+      }
+      .back-link {
+        margin: 1.5rem auto 0;
+        display: block;
       }
     }
   </style>
@@ -273,16 +306,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <div>
         <label for="task_name">Nama Tugas *</label>
         <input type="text" id="task_name" name="task_name" maxlength="255" required aria-required="true" value="<?= htmlspecialchars($task_name) ?>" />
-      </div>
-
-      <div>
-        <label for="assigned_user_id">Ditugaskan ke</label>
-        <select id="assigned_user_id" name="assigned_user_id" aria-label="Ditugaskan ke user">
-          <option value="">-- Pilih User --</option>
-          <?php foreach ($users as $user): ?>
-            <option value="<?= $user['id'] ?>" <?= ($assigned_user_id == $user['id']) ? 'selected' : '' ?>><?= htmlspecialchars($user['username']) ?></option>
-          <?php endforeach; ?>
-        </select>
       </div>
 
       <div>
@@ -306,16 +329,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <div>
         <label for="due_date">Tanggal Jatuh Tempo</label>
         <input type="date" id="due_date" name="due_date" value="<?= htmlspecialchars($due_date) ?>" />
-      </div>
-
-      <div>
-        <label for="estimated_time">Perkiraan Waktu (menit)</label>
-        <input type="number" id="estimated_time" name="estimated_time" min="0" step="1" value="<?= htmlspecialchars($estimated_time) ?>" />
-      </div>
-
-      <div>
-        <label for="actual_time">Waktu Sebenarnya (menit)</label>
-        <input type="number" id="actual_time" name="actual_time" min="0" step="1" value="<?= htmlspecialchars($actual_time) ?>" />
       </div>
 
       <div>
